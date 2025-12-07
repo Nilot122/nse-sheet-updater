@@ -13,7 +13,7 @@ response.raise_for_status()
 
 csv_text = response.text
 
-# CSV has NO HEADER → set header=None
+# CSV has NO HEADER → treat first row as data
 df = pd.read_csv(StringIO(csv_text), header=None)
 
 # Clean NaN / invalid values
@@ -32,21 +32,18 @@ WORKSHEET_NAME = "ImportData"
 
 sheet = client.open(SPREADSHEET_NAME).worksheet(WORKSHEET_NAME)
 
-# Clear sheet
-sheet.clear()
+# ---- Clear ONLY data rows (Row 3 onward) ----
+last_row = len(df) + 5
+sheet.batch_clear([f"A3:Z{last_row}"])
 
-# IST timestamp
+# ---- Row 1: Timestamp ----
 ist = pytz.timezone("Asia/Kolkata")
 timestamp = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S IST")
-
-# -------- ROW 1: Timestamp --------
 sheet.update("A1", [[f"Last Updated: {timestamp}"]])
 
-# -------- ROW 2: EMPTY (you will add header manually) --------
-sheet.update("A2", [["", "", "", "", ""]])
+# ---- Row 2: DO NOTHING (PRESERVE USER HEADER) ----
 
-# -------- ROW 3+: DATA --------
-data = df.values.tolist()
-sheet.update("A3", data)
+# ---- Row 3+: Write new data ----
+sheet.update("A3", df.values.tolist())
 
-print("🎉 Sheet updated with timestamp and data (no header, no sorting).")
+print("🎉 Sheet updated successfully — Row 2 preserved!")
