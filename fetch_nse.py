@@ -13,24 +13,26 @@ response.raise_for_status()
 csv_text = response.text
 df = pd.read_csv(StringIO(csv_text))
 
+# 🔥 FIX: Replace all NaN/inf with empty strings
+df = df.replace({pd.NA: "", float("nan"): "", pd.NaT: ""})
+df = df.fillna("")  # extra safety
+
 # Google Sheets auth
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
-# service_account.json will be created by GitHub Actions from a secret
 creds = ServiceAccountCredentials.from_json_keyfile_name("service_account.json", scope)
 client = gspread.authorize(creds)
 
-# 🔴 EDIT THESE TWO:
 SPREADSHEET_NAME = "Symbol Name Change Data"
-WORKSHEET_NAME = "ImportData"   # e.g. "ImportData"
+WORKSHEET_NAME = "ImportData"
 
 sheet = client.open(SPREADSHEET_NAME).worksheet(WORKSHEET_NAME)
 
-# Clear and update sheet
+# Clear sheet and update
 sheet.clear()
 sheet.update([df.columns.tolist()] + df.values.tolist())
 
-print("NSE data updated successfully!")
+print("🎉 NSE Symbol Change sheet updated successfully!")
