@@ -1,0 +1,32 @@
+name: Update NSE Symbol Change Sheet
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # runs every day at 03:00 UTC
+  workflow_dispatch:       # allows manual trigger from Actions tab
+
+jobs:
+  update-sheet:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - name: Install dependencies
+      run: |
+        pip install requests pandas gspread oauth2client
+
+    - name: Create service_account.json from secret
+      env:
+        GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+      run: |
+        printf '%s' "$GOOGLE_SA_JSON" > service_account.json
+
+    - name: Run updater script
+      run: python fetch_nse.py
