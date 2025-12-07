@@ -24,7 +24,7 @@ jobs:
 
     - name: Create service_account.json from secret
       env:
-        GOOGLE_SSA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+        GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
       run: |
         printf '%s' "$GOOGLE_SA_JSON" > service_account.json
 
