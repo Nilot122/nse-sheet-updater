@@ -18,7 +18,7 @@ df = pd.read_csv(StringIO(csv_text))
 # Clean NaN / inf values
 df = df.replace({pd.NA: "", float("nan"): "", pd.NaT: ""}).fillna("")
 
-# Google Sheets auth
+# Google Sheets Auth
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
@@ -31,28 +31,31 @@ WORKSHEET_NAME = "ImportData"
 
 sheet = client.open(SPREADSHEET_NAME).worksheet(WORKSHEET_NAME)
 
-# Clear entire sheet
+# Clear sheet
 sheet.clear()
 
-# Generate timestamp in IST
+# IST timestamp
 ist = pytz.timezone("Asia/Kolkata")
 timestamp = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S IST")
 
-# ---------- ROW 1: TIMESTAMP ----------
+# -------- ROW 1: Timestamp --------
 sheet.update("A1", [[f"Last Updated: {timestamp}"]])
 
-# ---------- ROW 2: HEADER ----------
+# -------- ROW 2: Header --------
 header = df.columns.tolist()
 sheet.update("A2", [header])
 
-# ---------- ROW 3+: DATA ----------
+# -------- ROW 3+: Data --------
 data = df.values.tolist()
 sheet.update("A3", data)
 
-print("Data written. Now applying sorting...")
+# -------- SORT DATA BY COLUMN D (4) DESCENDING --------
+# Sort range: A3 to last row
+last_row = 2 + len(data)  # since data starts at row 3
+sort_range(
+    sheet,
+    'A3:E' + str(last_row),
+    sort_specs=[{'dimensionIndex': 3, 'sortOrder': 'DESCENDING'}]
+)
 
-# ---------- SORT BY COLUMN D (4th column) Z → A ----------
-# We sort the range A3:E (all data, excluding timestamp & header)
-sheet.sort((4, "des"))  # Column 4, descending
-
-print("🎉 NSE Symbol Change sheet updated with timestamp, header, and sorted by column D (Z → A)!")
+print("🎉 Sheet updated with timestamp, header, data, and sorted by Column D (Z → A).")
